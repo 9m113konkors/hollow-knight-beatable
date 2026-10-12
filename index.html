@@ -1,29 +1,290 @@
 <!DOCTYPE html>
 <html lang="en-us">
 <head>
-<meta charset="utf-8">
-<base href="https://cdn.jsdelivr.net/gh/HorizonOfficia/hollow-knight/" target="_blank">
-<title>Hollow Knight</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden}#splash{position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000 center/cover no-repeat;z-index:100000;transition:opacity .5s}#load-txt{position:absolute;top:0;left:0;width:100vw;text-align:center;color:#fff;font:24px Arial;background:rgba(0,0,0,.8);padding:15px 0;border-bottom:1px solid rgba(255,255,255,.1)}.mod{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(30,30,30,.95);padding:25px;border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;z-index:100002;font-family:Arial,sans-serif;min-width:350px}.mod h3{margin-bottom:15px;display:flex;justify-content:space-between;align-items:center}.mod .close-x{cursor:pointer;font-size:22px;line-height:1;color:#aaa;background:none;border:none;padding:0 4px}.mod .close-x:hover{color:#fff}.mod input[type=text]{width:100%;padding:8px;margin:10px 0;background:#222;color:#fff;border:1px solid #555;border-radius:4px}.mod input[type=file]{margin:10px 0 15px}.mod hr{margin:15px 0;border:0;border-top:1px solid #444}.mod btn,.sbtn{padding:8px 12px;cursor:pointer;background:#444;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:4px;transition:.2s}.mod btn:hover,.sbtn:hover{background:#555}#ucanvas{width:100vw;height:100vh;display:block;transition:filter .3s}#mwarn{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,.9);padding:20px;border-radius:8px;font:14px Arial;z-index:100001}#f-graph{position:fixed;bottom:12px;left:12px;width:200px;height:70px;background:rgba(0,0,0,.8);border-radius:6px;padding:10px;z-index:9999;transition:.3s}#f-canv{width:100%;height:100%;display:block}.sbtn{position:fixed;top:12px;font:14px Arial;z-index:9999;background:rgba(50,50,50,.85)}.sgrp{position:fixed;top:12px;right:388px;display:flex;z-index:9999;border-radius:4px;border:1px solid rgba(255,255,255,.2);overflow:hidden;transition:.3s}.sgrp button{background:rgba(50,50,50,.85);color:#fff;border:none;cursor:pointer;transition:.2s;font:14px Arial;padding:8px 12px}.sgrp button:hover{background:rgba(70,70,70,.95)}.sgrp .m{padding:8px 12px}.sgrp .d{padding:8px 8px;border-left:1px solid rgba(255,255,255,.2)}.hid{opacity:0;pointer-events:none}#ac-menu{position:fixed;top:55px;right:388px;background:rgba(30,30,30,.95);color:#fff;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:6px;font:13px Arial,sans-serif;z-index:10000;display:none}
-</style>
+  <meta charset="utf-8">
+  <base href="https://cdn.jsdelivr.net/gh/HorizonOfficia/hollow-knight/" target="_blank">
+  <title>Hollow Knight</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html, body {width:100vw;height:100vh;background:#000;overflow:hidden;display:flex;justify-content:center;align-items:center}
+    
+    /* --- Glass Gradient Splash Screen --- */
+    #splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #0d0d1a 0%, #1a0933 50%, #05050a 100%) center/cover no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100000;
+      transition: opacity .5s;
+    }
+
+    /* --- Glassmorphism Loading Box --- */
+    #load-txt {
+      position: relative;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+      color: #e0e6ff;
+      font: 18px "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0.5px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 24px 30px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.05);
+    }
+
+    .mod{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(30,30,30,.95);padding:25px;border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;z-index:100002;font-family:Arial,sans-serif;min-width:350px}
+    .mod h3{margin-bottom:15px;display:flex;justify-content:space-between;align-items:center} 
+    .mod .close-x{cursor:pointer;font-size:22px;line-height:1;color:#aaa;background:none;border:none;padding:0 4px}
+    .mod .close-x:hover{color:#fff}
+    .mod input[type=text]{width:100%;padding:8px;margin:10px 0;background:#222;color:#fff;border:1px solid #555;border-radius:4px}
+    .mod input[type=file]{margin:10px 0 15px} .mod hr{margin:15px 0;border:0;border-top:1px solid #444}
+    .mod btn,.sbtn{padding:8px 12px;cursor:pointer;background:#444;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:4px;transition:.2s}
+    .mod btn:hover,.sbtn:hover{background:#555}
+    
+    /* Dynamic canvas stretching */
+    #ucanvas{width:100vw;height:100vh;object-fit:fill;display:block;transition:filter .3s}
+    #mwarn{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,.9);padding:20px;border-radius:8px;font:14px Arial;z-index:100001}
+    
+    /* --- FPS Counter (Moved to Bottom Left) --- */
+    #f-graph{position:fixed;bottom:12px;left:12px;width:200px;height:70px;background:rgba(0,0,0,.8);border-radius:6px;padding:10px;z-index:9999;transition:.3s}
+    #f-canv{width:100%;height:100%;display:block}
+    
+    /* --- Dynamic UI Buttons --- */
+    .sbtn{position:fixed;top:12px;font:14px Arial;z-index:9999;background:rgba(50,50,50,.85)}
+    .sgrp{position:fixed;top:12px;right:388px;display:flex;z-index:9999;border-radius:4px;border:1px solid rgba(255,255,255,.2);overflow:hidden;transition:.3s}
+    .sgrp button{background:rgba(50,50,50,.85);color:#fff;border:none;cursor:pointer;transition:.2s;font:14px Arial;padding:8px 12px}
+    .sgrp button:hover{background:rgba(70,70,70,.95)}
+    .sgrp .m{padding:8px 12px} .sgrp .d{padding:8px 8px;border-left:1px solid rgba(255,255,255,.2)}
+    .hid{opacity:0;pointer-events:none}
+    #ac-menu{position:fixed;top:55px;right:388px;background:rgba(30,30,30,.95);color:#fff;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:6px;font:13px Arial,sans-serif;z-index:10000;display:none}
+  </style>
 </head>
 <body>
-<link rel="preload" href="sharedassets8.resource" as="fetch"><link rel="preload" href="sharedassets127.resource" as="fetch"><link rel="preload" href="sharedassets400.resource" as="fetch"><link rel="preload" href="sharedassets410.resource" as="fetch">
-<div id="splash"><div id="load-txt">Loading... 0% (0.00 MB / 912.81 MB)</div></div>
-<div id="sp-mod" class="mod">
-<h3><span>Customize Splash</span><button class="close-x" id="sp-x-btn">&times;</button></h3>
-<label>Image URL:</label><input type="text" id="sp-url" placeholder="https://example.com/img.png"><button class="mod btn" id="sp-ubtn">Apply URL</button><hr>
-<label>Upload Image:</label><br><input type="file" id="sp-file" accept="image/*"><hr>
-<button class="mod btn" id="sp-clr" style="background:#833;border-color:#a44">Reset</button>
-<button class="mod btn" id="sp-close-btn" style="float:right">Close</button>
-</div>
-<div id="mwarn">WebGL not supported on mobile</div>
-<canvas id="ucanvas"></canvas>
-<div id="f-graph" style="display:none"><canvas id="f-canv"></canvas></div>
-<div id="ac-menu"><label style="cursor:pointer"><input type="checkbox" id="ac-chk"> Auto Cap on Alt+Tab</label></div>
-<script>
-const $=i=>document.getElementById(i),spl=$("splash"),cv=$("ucanvas"),fg=$("f-graph"),fc=$("f-canv"),lt=$("load-txt");let lb=0,hd=!1,tId,uInst=null,lft=performance.now(),fr=0,fps=60,isCap=!1,cBtn,rsH;const tMB=912.81,fh=[];fc.width=180;fc.height=50;const ctx=fc.getContext("2d"),sSp=localStorage.getItem("hk_spl");sSp&&(spl.style.backgroundImage=`url(${sSp})`);const apSpl=e=>{try{localStorage.setItem("hk_spl",e),spl.style.backgroundImage=`url(${e})`}catch(e){alert("Image too large! Use URL.")}};$("sp-ubtn").onclick=()=>{const e=$("sp-url").value;e&&apSpl(e)},$("sp-file").onchange=e=>{const t=e.target.files[0];if(!t)return;const s=new FileReader;s.onload=e=>apSpl(e.target.result),s.readAsDataURL(t)},$("sp-clr").onclick=()=>{localStorage.removeItem("hk_spl"),spl.style.backgroundImage="none",$("sp-url").value=$("sp-file").value=""};const closeSpMod=()=>$("sp-mod").style.display="none";$("sp-x-btn").onclick=closeSpMod,$("sp-close-btn").onclick=closeSpMod;const apRes=e=>{rsH&&window.removeEventListener("resize",rsH),window.addEventListener("resize",rsH=()=>{cv.width=window.innerWidth*e,cv.height=window.innerHeight*e,cv.style.width="100vw",cv.style.height="100vh"}),rsH()},uf=()=>{const e=(performance.now()-lft)/1e3;lft=performance.now(),fps=e>0?1/e:60,fr++,fr%3==0&&(fh.push(fps),fh.length>90&&fh.shift(),ctx.clearRect(0,0,180,50),fh.forEach((e,t)=>{const s=Math.min(e/60,1)*35;ctx.fillStyle=e>50?"#0f0":e>30?"#fa0":"#f33",ctx.fillRect(2*t,50-s,1.8,s)}),ctx.fillStyle="#fff",ctx.font="bold 13px monospace",ctx.shadowBlur=4,ctx.shadowColor="#000",ctx.fillText(Math.round(fps)+" FPS",6,16),ctx.shadowBlur=0),requestAnimationFrame(uf)},hUI=()=>{hd=!0,fg.classList.add("hid"),document.querySelectorAll(".sbtn, .sgrp").forEach(e=>e.classList.add("hid")),$("ac-menu").style.display="none"},sUI=()=>{hd||(hd=!1,fg.classList.remove("hid"),document.querySelectorAll(".sbtn, .sgrp").forEach(e=>e.classList.remove("hid"))),clearTimeout(tId),tId=setTimeout(hUI,5e3)};["keydown","mousemove","click"].forEach(e=>document.addEventListener(e,sUI)),sUI(),/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)&&(document.head.appendChild(Object.assign(document.createElement("meta"),{name:"viewport",content:"width=device-width,initial-scale=1"})),$("mwarn").style.display="block",setTimeout(()=>$("mwarn").style.display="none",5e3));const fwp=async e=>{const t=await fetch(e),s=t.body.getReader(),n=[];for(;;){const{done:e,value:t}=await s.read();if(e)break;lb+=t.length;const a=lb/1048576,c=Math.min(100,Math.floor(a/tMB*100));lt.textContent=`Loading... ${c}% (${a.toFixed(2)} MB / ${tMB} MB)`}return URL.createObjectURL(new Blob(n))},mf=async e=>URL.createObjectURL(new Blob(await Promise.all((await Promise.all(e.map(fwp))).map(e=>fetch(e).then(e=>e.blob()))))),gp=(e,t,s)=>Array.from({length:s-t+1},((s,n)=>`${e}.part${t+n}`));(async()=>{const[e,t]=await Promise.all([mf(gp("Build/hktruffled.data",1,45)),mf(gp("Build/hktruffled.wasm",1,2))]),s=document.createElement("script");s.src="Build/hktruffled.loader.js",s.onload=()=>{createUnityInstance(cv,{dataUrl:e,frameworkUrl:"Build/hktruffled.framework.js",codeUrl:t,streamingAssetsUrl:"StreamingAssets",companyName:"Team Cherry",productName:"Hollow Knight",productVersion:"1.0",memory:402653184,useWebGL2:!0,webglContextAttributes:{antialias:!1,alpha:!1,depth:!0,stencil:!1,premultipliedAlpha:!1,preserveDrawingBuffer:!1,desynchronized:!0}}).then(e=>{uInst=e,spl.style.opacity="0",setTimeout(()=>spl.remove(),500),mkB("Download Save",12,sDl),mkB("Import Save",156,()=>inp.click()),mkB("Fullscreen",274,()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()),mkB("Custom Splash",515,()=>$("sp-mod").style.display="block");const t=document.createElement("div");t.className="sgrp",cBtn=document.createElement("button"),cBtn.className="m",cBtn.textContent="Cap CPU",cBtn.onclick=()=>tCap();const s=document.createElement("button");s.className="d",s.innerHTML="&#9662;",s.onclick=e=>{e.stopPropagation();const t=$("ac-menu");t.style.display="block"===t.style.display?"none":"block"},t.append(cBtn,s),document.body.appendChild(t),fg.style.display="block",uf()})},document.body.appendChild(s)})();const mkB=(e,t,s)=>{const n=document.createElement("button");return n.className="sbtn",n.style.right=t+"px",n.textContent=e,s&&(n.onclick=s),document.body.appendChild(n),n},inp=Object.assign(document.createElement("input"),{type:"file",accept:".json,.txt,.dat,application/json",style:"display:none"});document.body.appendChild(inp);const sDl=()=>indexedDB.open("/idbfs").onsuccess=e=>{const t=e.target.result.transaction("FILE_DATA","readonly").objectStore("FILE_DATA"),s=t.getAll(),n=t.getAllKeys();s.onsuccess=()=>n.onsuccess=()=>{const e=n.result.map(((e,t)=>{let n=s.result[t].contents;if(n&&(n instanceof Int8Array||ArrayBuffer.isView(n))){const e={};for(let t=0;t<n.length;t++)e[t]=n[t];n=e}return{key:e,value:{timestamp:s.result[t].timestamp,mode:s.result[t].mode,contents:n}}})),t=new Blob([JSON.stringify(e,null,2)],{type:"application/json"}),a=URL.createObjectURL(t),c=document.createElement("a");c.href=a,c.download="hk-save.json",document.body.appendChild(c),c.click(),setTimeout(()=>{document.body.removeChild(c),URL.revokeObjectURL(a)},100)}};inp.onchange=e=>{const t=e.target.files[0];if(!t)return;const s=new FileReader;s.onload=()=>{try{const e=JSON.parse(s.result);indexedDB.open("/idbfs").onsuccess=t=>{const s=t.target.result.transaction("FILE_DATA","readwrite"),n=s.objectStore("FILE_DATA");n.getAllKeys().onsuccess=t=>{const s=t.target.result;if(!s.length)return;const a=s[0].split("/")[2];s.forEach(e=>{e.includes(a)||n.delete(e)}),e.forEach(e=>{const t=e.key.split("/");t[2]=a;let s=e.value.contents;if(s&&"object"==typeof s&&!(s instanceof Int8Array)){const e=new Int8Array(Object.keys(s).length);Object.keys(s).forEach(t=>e[t]=s[t]),s=e}n.put({timestamp:new Date(e.value.timestamp),mode:e.value.mode,contents:s},t.join("/"))})}}}catch(e){}},s.readAsText(t)};const tCap=e=>{"boolean"==typeof e?isCap=e:isCap=!isCap,cBtn&&(cBtn.textContent=isCap?"Resume":"Cap CPU",cBtn.style.background=isCap?"rgba(180,60,60,.9)":""),cv.style.filter=isCap?"brightness(0.2)":"brightness(1)",uInst&&uInst.Module&&(isCap?uInst.Module.pauseMainLoop():uInst.Module.resumeMainLoop())},aC=$("ac-chk"),handleTabChange=()=>{aC&&aC.checked&&tCap(document.hidden||!document.hasFocus())};window.addEventListener("blur",handleTabChange),window.addEventListener("focus",handleTabChange),document.addEventListener("visibilitychange",handleTabChange),navigator.serviceWorker&&navigator.serviceWorker.register("/sw.js");
-</script>
+  <link rel="preload" href="sharedassets8.resource" as="fetch"> <link rel="preload" href="sharedassets127.resource" as="fetch">
+  <link rel="preload" href="sharedassets400.resource" as="fetch"> <link rel="preload" href="sharedassets410.resource" as="fetch">
+  
+  <div id="splash"><div id="load-txt">Loading... 0% (0.00 MB / 912.81 MB)</div></div>
+
+  <div id="sp-mod" class="mod">
+    <h3>
+      <span>Customize Splash</span>
+      <button class="close-x" id="sp-x-btn">&times;</button>
+    </h3>
+    <label>Image URL:</label><input type="text" id="sp-url" placeholder="https://example.com/img.png"><button class="mod btn" id="sp-ubtn">Apply URL</button><hr>
+    <label>Upload Image:</label><br><input type="file" id="sp-file" accept="image/*"><hr>
+    <button class="mod btn" id="sp-clr" style="background:#833;border-color:#a44">Reset</button>
+    <button class="mod btn" id="sp-close-btn" style="float:right">Close</button>
+  </div>
+
+  <div id="mwarn">WebGL not supported on mobile</div>
+  <canvas id="ucanvas"></canvas>
+  <div id="f-graph" style="display:none"><canvas id="f-canv"></canvas></div>
+  <div id="ac-menu"><label style="cursor:pointer"><input type="checkbox" id="ac-chk"> Auto Cap on Alt+Tab</label></div>
+
+  <script>
+    const $= id => document.getElementById(id), spl =$('splash'), cv = $('ucanvas'), fg =$('f-graph'), fc = $('f-canv'), lt =$('load-txt');
+    let lb=0, hd=!1, tId, uInst=null, lft=performance.now(), fr=0, fps=60, isCap=!1, cBtn;
+    const estimatedTotalMB = 912.81, fh = [];
+    fc.width=180; fc.height=50; const ctx=fc.getContext('2d');
+
+    // Canvas Auto-Resizer for edge-to-edge rendering
+    const resizeCanvas = () => {
+      cv.width = window.innerWidth;
+      cv.height = window.innerHeight;
+      cv.style.width = "100vw";
+      cv.style.height = "100vh";
+    };
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // --- Custom Splash Logic ---
+    const sSp = localStorage.getItem('hk_spl'); if(sSp) spl.style.backgroundImage=url(${sSp});
+    const apSpl = u => { try{ localStorage.setItem('hk_spl',u); spl.style.backgroundImage=url(${u}); } catch(e){ alert("Image too large! Use URL."); } };
+    $('sp-ubtn').onclick = () => { const u=$('sp-url').value; if(u) apSpl(u); };
+    $('sp-file').onchange = e => { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=ev=>apSpl(ev.target.result); r.readAsDataURL(f); };$('sp-clr').onclick = () => { localStorage.removeItem('hk_spl'); spl.style.backgroundImage='none'; $('sp-url').value=$('sp-file').value=''; };
+    
+    // Splash Modal Close Buttons
+    const closeSpMod = () => $('sp-mod').style.display='none';$('sp-x-btn').onclick = closeSpMod;
+    $('sp-close-btn').onclick = closeSpMod;
+
+    // --- Core Systems & UI ---
+    const uf = () => {
+      const dt=(performance.now()-lft)/1000; lft=performance.now(); fps=dt>0?1/dt:60; fr++;
+      if(fr%3===0){
+        fh.push(fps); if(fh.length>90) fh.shift(); ctx.clearRect(0,0,180,50);
+        fh.forEach((f,i)=>{ const h=Math.min(f/60,1)35; ctx.fillStyle=f>50?'#0f0':f>30?'#fa0':'#f33'; ctx.fillRect(i2,50-h,1.8,h); });
+        ctx.fillStyle='#fff'; ctx.font='bold 13px monospace'; ctx.shadowBlur=4; ctx.shadowColor='#000'; ctx.fillText(Math.round(fps)+' FPS',6,16); ctx.shadowBlur=0;
+      } requestAnimationFrame(uf);
+    };
+    
+    // Hide/Show UI Idle timer
+    const hUI = () => { hd=!0; fg.classList.add('hid'); document.querySelectorAll('.sbtn, .sgrp').forEach(b=>b.classList.add('hid')); $('ac-menu').style.display='none'; };
+    const sUI = () => { if(hd){ hd=!1; fg.classList.remove('hid'); document.querySelectorAll('.sbtn, .sgrp').forEach(b=>b.classList.remove('hid')); } clearTimeout(tId); tId=setTimeout(hUI,5000); };
+    ['keydown','mousemove','click'].forEach(e=>document.addEventListener(e,sUI)); sUI();
+
+    if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){ document.head.appendChild(Object.assign(document.createElement('meta'),{name:'viewport',content:'width=device-width,initial-scale=1'})); $('mwarn').style.display="block"; setTimeout(()=>$('mwarn').style.display="none",5000); }
+
+    // --- Safe Streaming Fetch with Safe Progress ---
+    const fwp = async u => { 
+      const r = await fetch(u);
+      if (!r.ok) throw new Error(HTTP error! status: ${r.status});
+      const rd = r.body.getReader(), ch = []; 
+      while(1) { 
+        const {done, value} = await rd.read(); 
+        if (done) break; 
+        lb += value.length; 
+        ch.push(value); 
+        const mb = lb / 1048576;
+        const pct = Math.min(99, Math.floor((mb / estimatedTotalMB) * 100));
+        lt.textContent = Loading... ${pct}% (${mb.toFixed(2)} MB / ${estimatedTotalMB} MB); 
+      } 
+      return URL.createObjectURL(new Blob(ch)); 
+    };
+
+    const mf = async p => URL.createObjectURL(new Blob(await Promise.all((await Promise.all(p.map(fwp))).map(u=>fetch(u).then(r=>r.blob())))));
+    const gp = (f,s,e) => Array.from({length:e-s+1},(_,i)=>${f}.part${s+i});
+
+    (async()=>{
+      try {
+        const [du, wu] = await Promise.all([
+          mf(gp("Build/hktruffled.data", 1, 45)), 
+          mf(gp("Build/hktruffled.wasm", 1, 2))
+        ]);
+        
+        lt.textContent = Loading... 100% (${(lb / 1048576).toFixed(2)} MB);
+
+        const sc = document.createElement("script"); 
+        sc.src = "Build/hktruffled.loader.js";
+        sc.onload = () => createUnityInstance(cv, { 
+          dataUrl: du, 
+          frameworkUrl: "Build/hktruffled.framework.js", 
+          codeUrl: wu, 
+          streamingAssetsUrl: "StreamingAssets", 
+          companyName: "Team Cherry", 
+          productName: "Hollow Knight", 
+          productVersion: "1.0", 
+          memory: 38410241024, 
+          useWebGL2: !0, 
+          webglContextAttributes: {antialias:!1, alpha:!1, depth:!0, stencil:!1, premultipliedAlpha:!1, preserveDrawingBuffer:!1, desynchronized:!0} 
+        }).then(i => {
+          uInst = i; 
+          resizeCanvas();
+          spl.style.opacity = '0'; 
+          setTimeout(() => spl.remove(), 500);
+          
+          // Generate Standard Buttons
+          mkB("Download Save", 12, sDl); 
+          mkB("Import Save", 156, () => inp.click()); 
+          mkB("Fullscreen", 274, () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen());
+          mkB("Custom Splash", 515, () => $('sp-mod').style.display = 'block');
+
+          // Generate Split Button for CPU Cap (Left=Toggle, Right=Menu)
+          const cg = document.createElement("div"); 
+          cg.className = "sgrp";
+          cBtn = document.createElement("button"); 
+          cBtn.className = "m"; 
+          cBtn.textContent = "Cap CPU"; 
+          cBtn.onclick = () => tCap();
+          const dBtn = document.createElement("button"); 
+          dBtn.className = "d"; 
+          dBtn.innerHTML = "&#9662;";
+          dBtn.onclick = e => { 
+            e.stopPropagation(); 
+            const m = $('ac-menu'); 
+            m.style.display = m.style.display === 'block' ? 'none' : 'block'; 
+          };
+          cg.append(cBtn, dBtn); 
+          document.body.appendChild(cg);
+          
+          fg.style.display = 'block'; 
+          uf();
+        }); 
+        document.body.appendChild(sc);
+      } catch (err) {
+        lt.textContent = "Loading failed. Please refresh the page.";
+      }
+    })();
+
+    // --- Dynamic Buttons & IDB Saving System ---
+    const mkB = (t,r,c) => { const b=document.createElement("button"); b.className="sbtn"; b.style.right=r+"px"; b.textContent=t; if(c)b.onclick=c; document.body.appendChild(b); return b; };
+    const inp = Object.assign(document.createElement("input"),{type:"file",accept:".json,.txt,.dat,application/json",style:"display:none"}); document.body.appendChild(inp);
+    
+    const sDl = () => indexedDB.open("/idbfs").onsuccess = e => {
+      const s=e.target.result.transaction("FILE_DATA","readonly").objectStore("FILE_DATA"), rq=s.getAll(), kr=s.getAllKeys();
+      rq.onsuccess = () => kr.onsuccess = () => {
+        const d=kr.result.map((k,i)=>{ 
+          let c=rq.result[i].contents; 
+          if(c && (c instanceof Int8Array || ArrayBuffer.isView(c))) {
+            const obj = {};
+            for (let j = 0; j < c.length; j++) obj[j] = c[j];
+            c = obj;
+          }
+          return {key:k,value:{timestamp:rq.result[i].timestamp,mode:rq.result[i].mode,contents:c}}; 
+        });
+        const blob = new Blob([JSON.stringify(d,null,2)],{type:"application/json"});
+        const url = URL.createObjectURL(blob);
+        const a=document.createElement("a"); 
+        a.href=url; 
+        a.download="hk-save.json"; 
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      };
+    };
+    
+    inp.onchange = e => {
+      const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+      r.onload=()=>{
+        try {
+          const dt=JSON.parse(r.result);
+          indexedDB.open("/idbfs").onsuccess = ev => {
+            const tx=ev.target.result.transaction("FILE_DATA","readwrite"), s=tx.objectStore("FILE_DATA");
+            s.getAllKeys().onsuccess = ek => {
+              const k=ek.target.result; if(!k.length)return; const cH=k[0].split("/")[2];
+              k.forEach(x=>{ if(!x.includes(cH)) s.delete(x); });
+              dt.forEach(en=>{
+                const p=en.key.split("/"); p[2]=cH; let c=en.value.contents;
+                if(c && typeof c==="object" && !(c instanceof Int8Array)){ const arr=new Int8Array(Object.keys(c).length); Object.keys(c).forEach(i=>arr[i]=c[i]); c=arr; }
+                s.put({timestamp:new Date(en.value.timestamp),mode:en.value.mode,contents:c}, p.join("/"));
+              });
+            };
+          };
+        } catch(err){}
+      }; r.readAsText(f);
+    };
+
+    // --- CPU Cap Logic ---
+    const tCap = targetState => {
+      isCap = (typeof targetState === "boolean") ? targetState : !isCap;
+      if(cBtn){ cBtn.textContent=isCap?"Resume":"Cap CPU"; cBtn.style.background=isCap?"rgba(180,60,60,.9)":""; }
+      cv.style.filter=isCap?"brightness(0.2)":"brightness(1)";
+      if(uInst&&uInst.Module) isCap?uInst.Module.pauseMainLoop():uInst.Module.resumeMainLoop();
+    };
+    
+    const aC = $('ac-chk');
+    const handleTabChange = () => {
+      if (aC && aC.checked) {
+        tCap(document.hidden || !document.hasFocus());
+      }
+    };
+
+    window.addEventListener("blur", handleTabChange);
+    window.addEventListener("focus", handleTabChange);
+    document.addEventListener("visibilitychange", handleTabChange);
+
+    if(navigator.serviceWorker) navigator.serviceWorker.register("/sw.js");
+  </script>
 </body>
 </html>
