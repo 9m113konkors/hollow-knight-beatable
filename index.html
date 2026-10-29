@@ -50,8 +50,19 @@
     .mod btn,.sbtn{padding:8px 12px;cursor:pointer;background:#444;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:4px;transition:.2s}
     .mod btn:hover,.sbtn:hover{background:#555}
     
-    /* Dynamic canvas stretching */
-    #ucanvas{width:100vw;height:100vh;object-fit:fill;display:block;transition:filter .3s}
+    /* Hard-override Unity's inline styles on Chromebooks */
+    #ucanvas {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      display: block !important;
+      transition: filter .3s;
+    }
+
     #mwarn{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,.9);padding:20px;border-radius:8px;font:14px Arial;z-index:100001}
     
     /* --- FPS Counter (Moved to Bottom Left) --- */
@@ -60,12 +71,15 @@
     
     /* --- Dynamic UI Buttons --- */
     .sbtn{position:fixed;top:12px;font:14px Arial;z-index:9999;background:rgba(50,50,50,.85)}
-    .sgrp{position:fixed;top:12px;right:388px;display:flex;z-index:9999;border-radius:4px;border:1px solid rgba(255,255,255,.2);overflow:hidden;transition:.3s}
+    .sgrp{position:fixed;top:12px;display:flex;z-index:9999;border-radius:4px;border:1px solid rgba(255,255,255,.2);overflow:hidden;transition:.3s}
     .sgrp button{background:rgba(50,50,50,.85);color:#fff;border:none;cursor:pointer;transition:.2s;font:14px Arial;padding:8px 12px}
     .sgrp button:hover{background:rgba(70,70,70,.95)}
     .sgrp .m{padding:8px 12px} .sgrp .d{padding:8px 8px;border-left:1px solid rgba(255,255,255,.2)}
     .hid{opacity:0;pointer-events:none}
-    #ac-menu{position:fixed;top:55px;right:388px;background:rgba(30,30,30,.95);color:#fff;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:6px;font:13px Arial,sans-serif;z-index:10000;display:none}
+    #ac-menu, #dl-menu{position:fixed;top:55px;background:rgba(30,30,30,.95);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;font:13px Arial,sans-serif;z-index:10000;display:none;overflow:hidden}
+    #dl-menu div{padding:10px 14px;cursor:pointer;transition:background .2s;white-space:nowrap}
+    #dl-menu div:hover{background:rgba(255,255,255,.15)}
+    #dl-menu div:not(:last-child){border-bottom:1px solid rgba(255,255,255,.1)}
   </style>
 </head>
 <body>
@@ -88,7 +102,12 @@
   <div id="mwarn">WebGL not supported on mobile</div>
   <canvas id="ucanvas"></canvas>
   <div id="f-graph" style="display:none"><canvas id="f-canv"></canvas></div>
-  <div id="ac-menu"><label style="cursor:pointer"><input type="checkbox" id="ac-chk"> Auto Cap on Alt+Tab</label></div>
+  <div id="ac-menu" style="right:410px;padding:10px"><label style="cursor:pointer"><input type="checkbox" id="ac-chk"> Auto Cap on Alt+Tab</label></div>
+  
+  <div id="dl-menu" style="right:12px">
+    <div id="dl-opt-dat">Download .dat (PC / Steam Save)</div>
+    <div id="dl-opt-json">Download .json (Full Web Backup)</div>
+  </div>
 
   <script>
     const $= id => document.getElementById(id), spl =$('splash'), cv = $('ucanvas'), fg =$('f-graph'), fc = $('f-canv'), lt =$('load-txt');
@@ -96,19 +115,37 @@
     const estimatedTotalMB = 912.81, fh = [];
     fc.width=180; fc.height=50; const ctx=fc.getContext('2d');
 
-    // Canvas Auto-Resizer for edge-to-edge rendering
-    const resizeCanvas = () => {
-      cv.width = window.innerWidth;
-      cv.height = window.innerHeight;
-      cv.style.width = "100vw";
-      cv.style.height = "100vh";
+    // Force Canvas Dimensions and sync devicePixelRatio for Chrome OS
+    const forceCanvasScale = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      
+      cv.width = w * dpr;
+      cv.height = h * dpr;
+      cv.style.width = w + "px";
+      cv.style.height = h + "px";
+
+      if (uInst && uInst.Module) {
+        try { uInst.Module.setCanvasSize(w * dpr, h * dpr); } catch(e){}
+      }
     };
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+
+    window.addEventListener("resize", () => {
+      forceCanvasScale();
+      setTimeout(forceCanvasScale, 100);
+      setTimeout(forceCanvasScale, 300);
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      forceCanvasScale();
+      setTimeout(forceCanvasScale, 100);
+      setTimeout(forceCanvasScale, 300);
+    });
 
     // --- Custom Splash Logic ---
-    const sSp = localStorage.getItem('hk_spl'); if(sSp) spl.style.backgroundImage=url(${sSp});
-    const apSpl = u => { try{ localStorage.setItem('hk_spl',u); spl.style.backgroundImage=url(${u}); } catch(e){ alert("Image too large! Use URL."); } };
+    const sSp = localStorage.getItem('hk_spl'); if(sSp) spl.style.backgroundImage=`url(${sSp})`;
+    const apSpl = u => { try{ localStorage.setItem('hk_spl',u); spl.style.backgroundImage=`url(${u})`; } catch(e){ alert("Image too large! Use URL."); } };
     $('sp-ubtn').onclick = () => { const u=$('sp-url').value; if(u) apSpl(u); };
     $('sp-file').onchange = e => { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=ev=>apSpl(ev.target.result); r.readAsDataURL(f); };$('sp-clr').onclick = () => { localStorage.removeItem('hk_spl'); spl.style.backgroundImage='none'; $('sp-url').value=$('sp-file').value=''; };
     
@@ -121,22 +158,29 @@
       const dt=(performance.now()-lft)/1000; lft=performance.now(); fps=dt>0?1/dt:60; fr++;
       if(fr%3===0){
         fh.push(fps); if(fh.length>90) fh.shift(); ctx.clearRect(0,0,180,50);
-        fh.forEach((f,i)=>{ const h=Math.min(f/60,1)35; ctx.fillStyle=f>50?'#0f0':f>30?'#fa0':'#f33'; ctx.fillRect(i2,50-h,1.8,h); });
+        fh.forEach((f,i)=>{ const h=Math.min(f/60,1)*35; ctx.fillStyle=f>50?'#0f0':f>30?'#fa0':'#f33'; ctx.fillRect(i*2,50-h,1.8,h); });
         ctx.fillStyle='#fff'; ctx.font='bold 13px monospace'; ctx.shadowBlur=4; ctx.shadowColor='#000'; ctx.fillText(Math.round(fps)+' FPS',6,16); ctx.shadowBlur=0;
       } requestAnimationFrame(uf);
     };
     
     // Hide/Show UI Idle timer
-    const hUI = () => { hd=!0; fg.classList.add('hid'); document.querySelectorAll('.sbtn, .sgrp').forEach(b=>b.classList.add('hid')); $('ac-menu').style.display='none'; };
+    const hUI = () => { hd=!0; fg.classList.add('hid'); document.querySelectorAll('.sbtn, .sgrp').forEach(b=>b.classList.add('hid')); $('ac-menu').style.display='none'; $('dl-menu').style.display='none'; };
     const sUI = () => { if(hd){ hd=!1; fg.classList.remove('hid'); document.querySelectorAll('.sbtn, .sgrp').forEach(b=>b.classList.remove('hid')); } clearTimeout(tId); tId=setTimeout(hUI,5000); };
     ['keydown','mousemove','click'].forEach(e=>document.addEventListener(e,sUI)); sUI();
 
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.sgrp')) {
+        $('ac-menu').style.display = 'none';
+        $('dl-menu').style.display = 'none';
+      }
+    });
+
     if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){ document.head.appendChild(Object.assign(document.createElement('meta'),{name:'viewport',content:'width=device-width,initial-scale=1'})); $('mwarn').style.display="block"; setTimeout(()=>$('mwarn').style.display="none",5000); }
 
-    // --- Safe Streaming Fetch with Safe Progress ---
+    // --- Safe Streaming Fetch ---
     const fwp = async u => { 
       const r = await fetch(u);
-      if (!r.ok) throw new Error(HTTP error! status: ${r.status});
+      if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
       const rd = r.body.getReader(), ch = []; 
       while(1) { 
         const {done, value} = await rd.read(); 
@@ -145,13 +189,13 @@
         ch.push(value); 
         const mb = lb / 1048576;
         const pct = Math.min(99, Math.floor((mb / estimatedTotalMB) * 100));
-        lt.textContent = Loading... ${pct}% (${mb.toFixed(2)} MB / ${estimatedTotalMB} MB); 
+        lt.textContent = `Loading... ${pct}% (${mb.toFixed(2)} MB / ${estimatedTotalMB} MB)`; 
       } 
       return URL.createObjectURL(new Blob(ch)); 
     };
 
     const mf = async p => URL.createObjectURL(new Blob(await Promise.all((await Promise.all(p.map(fwp))).map(u=>fetch(u).then(r=>r.blob())))));
-    const gp = (f,s,e) => Array.from({length:e-s+1},(_,i)=>${f}.part${s+i});
+    const gp = (f,s,e) => Array.from({length:e-s+1},(_,i)=>`${f}.part${s+i}`);
 
     (async()=>{
       try {
@@ -160,7 +204,7 @@
           mf(gp("Build/hktruffled.wasm", 1, 2))
         ]);
         
-        lt.textContent = Loading... 100% (${(lb / 1048576).toFixed(2)} MB);
+        lt.textContent = `Loading... 100% (${(lb / 1048576).toFixed(2)} MB)`;
 
         const sc = document.createElement("script"); 
         sc.src = "Build/hktruffled.loader.js";
@@ -172,24 +216,52 @@
           companyName: "Team Cherry", 
           productName: "Hollow Knight", 
           productVersion: "1.0", 
-          memory: 38410241024, 
+          memory: 384*1024*1024, 
           useWebGL2: !0, 
           webglContextAttributes: {antialias:!1, alpha:!1, depth:!0, stencil:!1, premultipliedAlpha:!1, preserveDrawingBuffer:!1, desynchronized:!0} 
         }).then(i => {
           uInst = i; 
-          resizeCanvas();
+          forceCanvasScale();
           spl.style.opacity = '0'; 
           setTimeout(() => spl.remove(), 500);
           
-          // Generate Standard Buttons
-          mkB("Download Save", 12, sDl); 
-          mkB("Import Save", 156, () => inp.click()); 
-          mkB("Fullscreen", 274, () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen());
-          mkB("Custom Splash", 515, () => $('sp-mod').style.display = 'block');
+          const toggleFS = () => {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen().then(() => forceCanvasScale()).catch(() => {});
+            } else {
+              document.exitFullscreen().then(() => forceCanvasScale()).catch(() => {});
+            }
+          };
 
-          // Generate Split Button for CPU Cap (Left=Toggle, Right=Menu)
+          // --- Split Button for Download Save ---
+          const dlg = document.createElement("div");
+          dlg.className = "sgrp";
+          dlg.style.right = "12px";
+          const dlBtn = document.createElement("button");
+          dlBtn.className = "m";
+          dlBtn.textContent = "Download Save";
+          dlBtn.onclick = () => sDlDat(); // Default action: download .dat
+          const dlDropBtn = document.createElement("button");
+          dlDropBtn.className = "d";
+          dlDropBtn.innerHTML = "&#9662;";
+          dlDropBtn.onclick = e => {
+            e.stopPropagation();
+            $('ac-menu').style.display = 'none';
+            const m = $('dl-menu');
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+          };
+          dlg.append(dlBtn, dlDropBtn);
+          document.body.appendChild(dlg);
+
+          // Standard Buttons
+          mkB("Import Save", 175, () => inp.click()); 
+          mkB("Fullscreen", 295, toggleFS);
+          mkB("Custom Splash", 535, () => $('sp-mod').style.display = 'block');
+
+          // Split Button for CPU Cap
           const cg = document.createElement("div"); 
           cg.className = "sgrp";
+          cg.style.right = "410px";
           cBtn = document.createElement("button"); 
           cBtn.className = "m"; 
           cBtn.textContent = "Cap CPU"; 
@@ -199,6 +271,7 @@
           dBtn.innerHTML = "&#9662;";
           dBtn.onclick = e => { 
             e.stopPropagation(); 
+            $('dl-menu').style.display = 'none';
             const m = $('ac-menu'); 
             m.style.display = m.style.display === 'block' ? 'none' : 'block'; 
           };
@@ -218,7 +291,8 @@
     const mkB = (t,r,c) => { const b=document.createElement("button"); b.className="sbtn"; b.style.right=r+"px"; b.textContent=t; if(c)b.onclick=c; document.body.appendChild(b); return b; };
     const inp = Object.assign(document.createElement("input"),{type:"file",accept:".json,.txt,.dat,application/json",style:"display:none"}); document.body.appendChild(inp);
     
-    const sDl = () => indexedDB.open("/idbfs").onsuccess = e => {
+    // Download as JSON
+    const sDlJson = () => indexedDB.open("/idbfs").onsuccess = e => {
       const s=e.target.result.transaction("FILE_DATA","readonly").objectStore("FILE_DATA"), rq=s.getAll(), kr=s.getAllKeys();
       rq.onsuccess = () => kr.onsuccess = () => {
         const d=kr.result.map((k,i)=>{ 
@@ -237,12 +311,46 @@
         a.download="hk-save.json"; 
         document.body.appendChild(a);
         a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }, 100);
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
       };
     };
+
+    // Download as .dat
+    const sDlDat = () => indexedDB.open("/idbfs").onsuccess = e => {
+      const s = e.target.result.transaction("FILE_DATA", "readonly").objectStore("FILE_DATA");
+      const rq = s.getAll(), kr = s.getAllKeys();
+      rq.onsuccess = () => kr.onsuccess = () => {
+        const keys = kr.result;
+        const records = rq.result;
+        const idx = keys.findIndex(k => typeof k === "string" && k.endsWith("/user1.dat"));
+        if (idx === -1) {
+          alert("No user1.dat save file found in IndexedDB!");
+          return;
+        }
+        let raw = records[idx].contents;
+        let bytes;
+        if (raw instanceof Int8Array || raw instanceof Uint8Array) {
+          bytes = new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength);
+        } else if (typeof raw === "object" && raw !== null) {
+          const kArr = Object.keys(raw);
+          bytes = new Uint8Array(kArr.length);
+          for (let i = 0; i < kArr.length; i++) {
+            bytes[i] = raw[i] & 0xFF;
+          }
+        }
+        const blob = new Blob([bytes], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "user1.dat";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+      };
+    };
+
+    $('dl-opt-dat').onclick = () => { sDlDat(); $('dl-menu').style.display='none'; };
+    $('dl-opt-json').onclick = () => { sDlJson(); $('dl-menu').style.display='none'; };
     
     inp.onchange = e => {
       const f=e.target.files[0]; if(!f)return; const r=new FileReader();
